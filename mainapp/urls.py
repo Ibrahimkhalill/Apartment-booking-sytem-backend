@@ -1,46 +1,69 @@
+
 from django.urls import path
-from .views import *
-
+from .views import * 
 urlpatterns = [
-     
-    path('index/',index,name='index'),
-    path('send/otp/', send_otp, name='send_otp'),
-    # path('send/otp-drm/', otp, name='send_otp'),
-    path('pasword/send/otp/', Password_reset_send_otp, name='passwprd_send_otp'),
-    path('verify-otp/', verify_otp, name='verify_otp'),
-    path('password/change/', changepassword, name='change-password'),
-    path('password/reset/', reset_password, name='reset-password'),
+   
+   # path('',views.home, name='home'),
+   path('send/otp/', send_otp, name='send_otp'),
+   path('verify-otp/', verify_otp, name='verify_otp'),
+   path('api/signup/', signup_view, name='signup'),
+   path('api/login/',login_view,name='login'),
+   path('api/check-auth/',check_auth,name='check-auth'),
+   path('api/logout/',logout_api_view,name='logout'),
+   path('api/pasword/changes',password_change,name='password-changes'),
+   
+   path('api/get_room/',get_room, name='get-room'),
+   path('api/get_all_bed_type/',get_bed_type, name='get_all_bed_type'),
+   path('api/get_all_size/',get_room_size, name='get-size'),
+   path('api/get_feature/list/',get_feature_list, name='get-feature-list'),
+   path('api/get/reservation/',get_reservation, name='get-reservation'),
+   path('api/search/available/room/',available_room, name='available-room'),
+   path('api/search/available/room/<int:room_id>/',available_room_by_id, name='available-room-id'),
+   path('api/reservation/<int:room_id>',reservation,name='reservation'),
+   path('release-room/<str:uuid>/', release_room, name='release_room'),
+   path('confirmation_emai/',confirmation, name='confirmation'),
+   path('api/book_room/', book_room, name="book-room"),
+   path('api/get_booking/<str:uuid>/', get_booking, name="get-booking"),
+   path('api/upadte_reservation/<int:id>/', update_reservation, name="upadte_reservation"),
 
-    path('api/signup/', signup_view, name='signup'),
-    path('api/google/signup/',google_signup,name='google'),
-    path('api/login/',login_view,name='login'),
-    path('api/google/login/',goole_login_view,name='login'),
-    path('api/logout/',logout_view,name='login'),
-    path('api/get-products/', get_products, name='get_videos'),
-    path('api/get-brand/', get_brand, name='get-brand'),
-    # path('api/get-product-subcategory/',get_product_subcategory, name='get-productsubcategory'),
-    path('api/get-products/image/', get_product_image, name='get-image'),
-    path('api/update-item/',update_item, name='update-item'),
-    path('api/cart-items/',cart, name='cart-items'),
-    path('api/place-order/', processOrder, name='place-order'),
-    path('api/get-product-id/<int:id>/', get_product_id, name='get-product-id'),
-    path('api/get-subcategory/',get_subcategory,name="get-subcategory"),
-    path('api/get-displaymarketing/',get_displaymarketing,name="get-displaymarketing"),
-    path('api/search-product/',itemSearch,name='search-product'),
-    path('api/get-subcategory-product/', get_subcategory_product, name='get-subcategory-product'),
-    path('api/save/feedback/', save_feedback, name='save-feedback'),
-    path('api/save/ecomerce/issue/', save_issue, name='save-feedback'),
-    # path('products/', product_list_create_view, name='product-list-create'),
-    # path('products/<int:pk>/', product_detail_view, name='product-detail'),
-    path('api/order/item/delete/<int:id>',delete_order_item,name="delete-order-item"),
-    path('api/watchlist/item/delete/<int:id>',delete_wishlist_product,name="delete-watchlist-item"),
+   path('api/save-room/data/',add_room, name="save-room"),
+   path('api/edit-room/<int:id>/',get_room_by_id, name="edit-room"),
+   path('api/update-room/<int:id>/',updated_room, name="update-room"),
+   path('api/delete/room/<int:id>/', detele_Room),
 
-    path('api/watchlist/product/save/' , SaveWatchlistProduct, name = "save-watchlist-product"),
-    path('api/wishListProduct/getAll/',getWishlistProduct,name='get-wishList-product'),
-    path('api/question/answer/getAll/',getQuestionAnswer,name='get-question-answer'),
-    path('api/question/answer/save/',SaveQuestionAnswer,name='save-question-answer'),
-    path('api/shipping/address/getAll/',getShhipingAddress,name='get-shipping-address'),
-    path('api/user/details/getAll/',getUserDeatils,name='get-user-details'),
-    path('order/confirmation/',OrderConfirm,name='get-user-details'),
+   path('api/get_available_rooms/',get_available_rooms, name="get_available-room"),
 
+
+   path('api/get-all-calculatioin/',get_calculation_data,name='get-all'),
+   path('api/get-all-images/',get_all_image,name='get-all-images'),
+   path('api/get-room-details/<str:id>',get_room_deatils,name='get-room-deatils'),
+
+   path ('api/add/display-slider/', add_display_slider),
+   path ('api/get/display-slider/', get_display_slider),
+   path ('api/update/display-slider/<int:id>/', update_display_slider),
+   path ('api/delete/display-slider/<int:id>/', detele_display_slider),
+
+
+   path ('api/add/bed-type/', add_bedType),
+   path ('api/update/bed-type/<int:id>/', update_BedType),
+   path ('api/delete/bed-type/<int:id>/', detele_BedType),
+
+   path ('api/add/room-size/', add_RoomSize),
+   path ('api/update/room-size/<int:id>/', update_RoomSize),
+   path ('api/delete/room-size/<int:id>/', detele_RoomSize),
+
+   path ('api/add/room-feature/', add_RoomFeature),
+   path ('api/update/room-feature/<int:id>/', update_RoomFeature),
+   path ('api/delete/room-feature/<int:id>/', detele_RoomFeature),
+   
+   path ('api/delete/room/<int:room_id>/feature/<int:feature_id>/', delete_feature_from_room),
+   path ('api/delete/room/image/<int:image_id>/', delete_image_from_room),
+   # path('get_date',views.get_date,name='get_date'),
+   # path('available_room/',views.available_room,name="available_room"),
+
+
+   # path('contactapi/', views.ContactList.as_view()),
+   # path('api_detail/<int:pk>/', views.ContactDetail.as_view()),
+
+   # path('index/',weather_views.index,name='index')
 ]

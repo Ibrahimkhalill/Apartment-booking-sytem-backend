@@ -1,48 +1,34 @@
-from django import forms
 from django.contrib import admin
 
 # Register your models here.
-from .models import *
 
-admin.site.register(Category)
-admin.site.register(SubCategory)
-# admin.site.register(ProductSubCategory)
-admin.site.register(DisplayMarketing)
-# admin.site.register(Products)
-admin.site.register(Order)
-admin.site.register(OrderItem)
-admin.site.register(ShippingAdress)
-admin.site.register(FeedBackUser)
-admin.site.register(IssueUserEcommerce)
-admin.site.register(Size)
-admin.site.register(Color)
-admin.site.register(Variant)
-admin.site.register(WatchListProduct)
-admin.site.register(QuestionAnswer)
-admin.site.register(DeliveryFee)
-admin.site.register(Status)
+from mainapp.models import *
+class ImagesInline(admin.TabularInline):
+    model = Images
+    extra = 1  # Number of empty image fields to sho
+
+@admin.register(Room)
+class RoomAdmin(admin.ModelAdmin):
+    list_display = ['room_no', 'room_type', 'is_available', 'price']
+    search_fields = ['room_no', 'room_type']
+    list_filter = ['is_available']
+    filter_horizontal = ['features']
+    inlines = [ImagesInline]  # Add the inline for Images
+
+admin.site.register(Reservation)
+admin.site.register(Contact)
+@admin.register(FeatureList)
+class FeatureListAdmin(admin.ModelAdmin):
+    list_display = ['feature_name']
+    search_fields = ['feature_name']
+
+@admin.register(Images)
+class ImagesAdmin(admin.ModelAdmin):
+    list_display = ['room', 'room_image']
+    
+admin.site.register(PreBooking)
+admin.site.register(RoomSize)
+admin.site.register(BedType)
 admin.site.register(OTP)
 admin.site.register(CustomeUser)
-admin.site.register(Brand)
-admin.site.register(ProductImage)
-
-from django.forms import inlineformset_factory
-
-# class ProductImageInline(admin.TabularInline):
-#     model = ProductImage
-#     extra = 1  # Number of extra forms to display
-    
-
-class ProductSizeInline(admin.TabularInline):
-    model = Size
-    extra = 1  # Number of extra forms to display
-   
-class ProductVariantInline(admin.TabularInline):
-    model = Variant
-    extra = 1  # Number of extra forms to display
-   
-
-class ProductAdmin(admin.ModelAdmin):
-    inlines = [ProductVariantInline]
-
-admin.site.register(Product, ProductAdmin)
+admin.site.register(DisplaySlider)

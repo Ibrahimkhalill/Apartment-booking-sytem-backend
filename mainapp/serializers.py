@@ -1,129 +1,106 @@
 from rest_framework import serializers
-
 from .models import *
 
-class CategoryNameSerializer(serializers.ModelSerializer):
-   
-  
-    class Meta:
-        model = Category
-        fields = ["id", "category_name"]
+# Serializer for the FeatureList model
 
-class SubCategorySerializer(serializers.ModelSerializer):
-    category = CategoryNameSerializer()
+class BedTypeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SubCategory
-        fields = ["id", "category", "subcategory_name","image"]
+        model = BedType
+        fields = ['id', 'bed_type']
+
+class RoomSizeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RoomSize
+        fields = ['id', 'size']
+
+class FeatureListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeatureList
+        fields = ['id', 'feature_name', 'feature_images']
+
+# Serializer for the Images model
+class ImagesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Images
+        fields = ['id', 'room', 'room_image']
+
+class DisplaySliderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DisplaySlider
+        fields = ['id', 'name', 'description',"slider_image","button_name"]
+
+
+# Serializer for the Room model
+class RoomSerializer(serializers.ModelSerializer):
+    features = FeatureListSerializer(many=True)  # Serializing many-to-many relation
+    images = ImagesSerializer(many=True, read_only=True)  # Serializing one-to-many relation with images
+    
+    class Meta:
+        model = Room
+        fields = [
+            'id', 
+            'room_no', 
+            'room_type', 
+            'bed_type',
+            'size',
+            'room_description',
+            'is_available', 
+            'price', 
+            'quantity', 
+            'room_people', 
+            'features', 
+            'images'
+            
+        ]
         
-class CategorySerializer(serializers.ModelSerializer):
-    subcategories = SubCategorySerializer(many=True, read_only=True)
-  
+class PrebookingSerializer(serializers.ModelSerializer):
+    room_id = RoomSerializer()  # Serialize the room details
     class Meta:
-        model = Category
-        fields = ["id", "category_name", "subcategories","icons"]
+        model = PreBooking
+        fields = ['id', 'room_id', 'room_quantity',
+            'adults','check_in_date', 'check_out_date']
 
-class  ColorSeriaLizer(serializers.ModelSerializer):
+
+# Serializer for the Reservation model
+class ReservationSerializer(serializers.ModelSerializer):
+    room_no = RoomSerializer()  # Serialize the room details
     
     class Meta:
-        model = Color
-        fields = ["id","name"]
-class  SizeSeriaLizer(serializers.ModelSerializer):
-    
+        model = Reservation
+        fields = [
+            'id', 
+            "confirmation_number",
+            'room_no', 
+            'name', 
+            'phone_number', 
+            'email', 
+            'address',
+            'check_in_date', 
+            'check_out_date', 
+            'amount', 
+            'booked_on',
+            'special_request',
+            'arrival_time',
+            'room_quantity',
+            'adults',
+            'payment',
+            'is_check_in',
+            'is_check_out'
+        ]
+
+# Serializer for the Contact model
+class ContactSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Color
-        fields = ["id","name"]
-class ProductImageSerializer(serializers.ModelSerializer):
-    color = ColorSeriaLizer()
-    class Meta:
-        model = ProductImage
-        # fields = ["id","product", "color","image"]
-        fields = ["id","image","color"]
-class BrandSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = Brand
-            # fields = ["id","product", "color","image"]
-            fields = ["id","name"]
+        model = Contact
+        fields = ['id', 'name', 'phone_number', 'email', 'message']
 
 
-class ProductSerializer(serializers.ModelSerializer):
-    Product_SubCategory = SubCategorySerializer()
-    brand = BrandSerializer()
+class MeasurementSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Product
-        fields = ['id', 'Product_SubCategory','name','brand', 'material', 'price','discount','digital','details','cover_image']   
+        model = Measurement
+        fields = '__all__'
 
-
-class VariantSerializer(serializers.ModelSerializer):
-    image = ProductImageSerializer()
-    product = ProductSerializer()
-    size = SizeSeriaLizer()
+class ReferenceObjectSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Variant
-        fields = ["id","product","image","size","quantity","price"] 
-
-class OrderItemSerializer(serializers.ModelSerializer):
-    variant = VariantSerializer()
-
-    class Meta:
-        model = OrderItem
-        fields = ['id', 'variant', 'order', 'quantity', 'date_added', 'get_total']
-class OrderSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Order
-        fields = ['id', 'user', 'date_orderd','complete','transaction_id','get_cart_total','get_cart_items']
-
-    get_cart_total = serializers.ReadOnlyField()
-    get_cart_items = serializers.ReadOnlyField()
-
-class DisplayMarketingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DisplayMarketing
-        fields =["id","image"]
-
-
-class WatchListProductSeriaLizer(serializers.ModelSerializer):
-    variant = VariantSerializer()
-    
-    class Meta:
-        model = WatchListProduct
-        fields = ["id","user","variant"]
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "username","email"]
-
-class CustomUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomeUser
-        fields = ["id", "username","email","phone_number"]
-
-class QuestionAnswerSerializer(serializers.ModelSerializer):
-    user = UserSerializer()  # Corrected field name to 'user'
-    product = ProductSerializer()
-    
-    class Meta:
-        model = QuestionAnswer
-        fields = ["id", "user","product", "question", "answer", "createAt"]
-class DeliveryFeeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DeliveryFee
-        fields = ["id", "address","fee","duration"]
-class StatusSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Status
-        fields = ["id", "status_name"]
-class ShippingAddressSerializer(serializers.ModelSerializer):
-    customer = UserSerializer()
-    order = OrderSerializer()
-    order_items = serializers.SerializerMethodField()
-    delivery_fee = DeliveryFeeSerializer()
-    status = StatusSerializer()
-
-    class Meta:
-        model = ShippingAdress
-        fields = ["id", "customer", "order", "status", "name", "address", "division", "district", "upazila", "phone_number", "delivery_fee","order_items"]
-
-    def get_order_items(self, obj):
-        order_items = OrderItem.objects.filter(order=obj.order)
-        serializer = OrderItemSerializer(order_items, many=True)
-        return serializer.data
+        model = ReferenceObject
+        fields = '__all__'

@@ -1,10 +1,10 @@
 from django.db import models
-from django.contrib.auth.models import User
-from ckeditor.fields import RichTextField
-from django.utils.html import format_html
-
-# Create your models here
-
+from datetime import date
+# Create your models here.
+from datetime import datetime, timedelta
+from django.utils import timezone
+import uuid
+from django.db import transaction
 
 class OTP(models.Model):
     email = models.EmailField(null=True, blank=True)
@@ -14,6 +14,12 @@ class OTP(models.Model):
 
     def __str__(self):
         return f'OTP for {self.email}: {self.otp}'
+	
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            # Delete existing OTPs for the same email
+            OTP.objects.filter(email=self.email).delete()
+            super().save(*args, **kwargs)
 
 class CustomeUser(models.Model):
 	username = models.CharField(max_length=100, blank=True, null=True)
@@ -22,199 +28,140 @@ class CustomeUser(models.Model):
 	def __str__(self):
 		return self.username
 
-class Category(models.Model):
-	category_name = models.TextField(null=True, blank=True)
-	icons =  models.ImageField(upload_to='icons',null=True,blank=True)
 
-	def __str__(self):
-		return self.category_name
-class SubCategory(models.Model):
-	category =   models.ForeignKey(Category,on_delete=models.SET_NULL,null=True,blank=True,related_name='subcategories')
-	subcategory_name = models.TextField(null=True, blank=True)
-	image = models.ImageField(upload_to='subcategory',null=True,blank=True)
+class BedType(models.Model):
+    bed_type = models.CharField(max_length=300, null=True)
+    def __str__(self):
+        return self.bed_type
+    
+class RoomSize(models.Model):
+    size = models.IntegerField(null=True, blank=True)
+    def __str__(self):
+        return str(self.size)  # Convert the integer to a string
 
-	def	 __str__(self):
-		return self.subcategory_name
+class DisplaySlider(models.Model):
+    name = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True,null=True)
+    slider_image  = models.ImageField(upload_to="Slider", default='0.jpeg')
+    button_name = models.CharField(max_length=200, null=True)
 
-class Brand(models.Model):
-	name = models.CharField(max_length=200, blank=True, null=True)
-
-	def __str__(self):
-		return self.name
-
-
-class Material(models.Model):
-	name = models.CharField(max_length=200, blank=True, null=True)
-
-	def __str__(self):
-		return self.name
-
-
-class Product(models.Model):
-    Product_SubCategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, null=True, blank =True,related_name='productsubcategories')
-    name = models.TextField(null=True, blank=False)
-    brand = models.ForeignKey(Brand,on_delete=models.SET_NULL, blank=True, null=True)
-    material = models.CharField(max_length=200, blank=True, null=True)
-    digital = models.BooleanField(default=False, null=True, blank=False)
-    details = RichTextField(blank=True)
-    discount = models.IntegerField(blank=True,null=True)
-    cover_image = models.ImageField(upload_to='product_images/', null=True, blank=True)
-    price = models.IntegerField(blank=True,null=True)
-	
     def __str__(self):
         return self.name
 
-class Size(models.Model):
-    name = models.CharField(max_length=200, blank=True, null=True)
-    def __str__(self):
-        return self.name
+class FeatureList(models.Model):
+    feature_name = models.CharField(max_length=200, null=True)
+    feature_images = models.ImageField(upload_to="Feature", default='0.jpeg')  # Removed unnecessary height/width fields
 
-class Color(models.Model):
-    name = models.CharField(max_length=200, blank=True, null=True)
     def __str__(self):
-        return self.name
-	
-class ProductImage(models.Model):
-    image = models.ImageField(upload_to='product_images/', null=True, blank=True)
-    color = models.ForeignKey(Color, on_delete=models.SET_NULL, blank=True, null=True)
+        return self.feature_name
     
+class Room(models.Model):
+    room_no = models.CharField(max_length=5, null=True)
+    bed_type = models.CharField(max_length=100, null=True)
+    room_type = models.CharField(max_length=200, null=True)
+    room_description = models.TextField(null=True, blank=True)
+    size = models.CharField(max_length=20, null=True)
+    is_available = models.BooleanField(default=True)
+    price = models.FloatField()
+    quantity = models.IntegerField(null=True, blank=True)
+    room_people = models.CharField(max_length=5, null=True, blank=True)
+    features = models.ManyToManyField(FeatureList)
     
+    # New fields for hold functionality
+
     def __str__(self):
-        return f"{self.color.name}"
+        return f"Room No: {self.room_no}"
+
+   
     
+class Images(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True, related_name='images')  # Added related_name for reverse lookup
+    room_image = models.ImageField(upload_to="media", default='0.jpeg')  # Removed `height_field` and `width_field`
+
+    def __str__(self):
+        return f"Image for Room {self.room.room_no}"
+
+
+class PreBooking(models.Model):
+    prebrookingId = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    room_id = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
+    room_quantity = models.IntegerField(null=True, blank=True)
+    adults = models.IntegerField(null=True, blank=True)
+    check_in_date = models.DateField(null=True, blank=True)
+    check_out_date = models.DateField(null=True, blank=True)
+    start_time = models.DateTimeField(auto_now_add=True)  # Store the time when booking is created
+    expiration_time = models.DateTimeField()
+    is_on_hold = models.BooleanField(default=False)
+    hold_until = models.DateTimeField(null=True, blank=True)  # Store hold expiration time
+
+    def save(self, *args, **kwargs):
+        if not self.pk:  # Only set it if it's a new instance
+            self.expiration_time = timezone.now() + timezone.timedelta(minutes=15)  # 10 minutes countdown
+        super().save(*args, **kwargs)
+
     @property
-    def imageURL(self):
-        try:
-            url = self.image.url
-        except:
-            url = ''
-        return url
-	
-class Variant(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, blank=True, null=True)
-    image = models.ForeignKey(ProductImage, on_delete=models.SET_NULL, blank=True, null=True)
-    size = models.ForeignKey(Size, on_delete=models.SET_NULL, blank=True, null=True)
-    quantity = models.IntegerField(blank=True, null=True)
-    price = models.IntegerField(blank=True, null=True)
+    def remaining_time(self):
+        return self.expiration_time - timezone.now()  # Calculate remaining time
+
+    def hold_room(self):
+        self.is_on_hold = True
+        self.hold_until = timezone.now() + timedelta(minutes=1)  # Extend hold time as needed
+        self.save()
+
+    def release_hold(self):
+        self.is_on_hold = False
+        self.hold_until = None
+        self.save()
+
+    def is_hold_expired(self):
+        if self.hold_until and timezone.now() > self.hold_until:
+            self.release_hold()
+            return True
+        return False
+
+    def __str__(self):
+        return f"PreBooking {self.prebrookingId} for  {self.room_id}"
+
+
+
+
+class Reservation(models.Model):
+    confirmation_number = models.CharField(max_length=10, unique=True, blank=True, null=True)  # Add this field
+    room_no = models.ForeignKey(Room, on_delete=models.CASCADE)
+    name=models.CharField(max_length=100)
+    phone_number = models.CharField(max_length=15)
+    email=models.CharField(max_length=100)
+    address = models.TextField(null=True, blank=True)
+    check_in_date = models.DateField(auto_now=False, auto_now_add=False)
+    check_out_date = models.DateField(auto_now=False, auto_now_add=False)
+    amount = models.FloatField()
+    booked_on = models.DateTimeField(auto_now_add=True) 
+    special_request = models.TextField(null=True, blank= True)
+    arrival_time = models.CharField(max_length=200, null=True)
+    room_quantity = models.IntegerField(null=True, blank=True)
+    adults = models.IntegerField(null=True, blank=True)
+    payment = models.BooleanField(default=False)
+    is_check_in = models.BooleanField(default=False)
+    is_check_out = models.BooleanField(default=False)
+    def __str__(self):
+        return "Booking ID: "+str(self.id)
+
+    @property
+    def is_past_due(self):
+        return date.today() >self.end_day
+
+class Contact(models.Model):
+    name=models.CharField(max_length=100)
+    phone_number = models.CharField(max_length=15)
+    email=models.CharField(max_length=100)
+    message=models.TextField(max_length=2000)
+    def __str__(self):
+        return self.name
     
-    
-    
+class ReferenceObject(models.Model):
+    name = models.CharField(max_length=100,null=True,blank=True)
+    width_cm = models.FloatField(null=True,blank=True)  # Known width in cm
 
-
-class Order(models.Model):
-	user=models.ForeignKey(User,on_delete=models.SET_NULL,blank=True,null=True)
-	date_orderd=models.DateTimeField(auto_now_add=True)
-	complete=models.BooleanField(default=False,null=True,blank=False)
-	transaction_id=models.CharField(max_length=200,null=True)
-    
-	def __str__(self):
-		return str(self.id)
-		
-
-	@property
-	def shipping(self):
-		shipping=False
-		orderitems=self.orderitem_set.all()
-		for i in orderitems:
-			if i.variant.product.digital==False:
-				shipping=True
-		return shipping
-	
-
-	@property
-	def get_cart_total(self):
-		orderitems=self.orderitem_set.all()
-		total=sum([item.get_total for item in orderitems])
-		return total
-	
-	@property
-	def get_order_item(self):
-		orderitems=self.orderitem_set.all()
-		return orderitems
-
-	@property
-	def get_cart_items(self):
-		orderitems=self.orderitem_set.all()
-		total=sum([item.quantity for item in orderitems])
-		return total
-
-class OrderItem(models.Model):
-	variant=models.ForeignKey(Variant,on_delete=models.SET_NULL,blank=True,null=True)
-	order=models.ForeignKey(Order,on_delete=models.SET_NULL,blank=True,null=True)
-	quantity=models.IntegerField(default=0,null=True,blank=True)
-	date_added=models.DateTimeField(auto_now_add=True)
-
-	@property
-	def get_total(self):
-		total=self.variant.price * self.quantity
-		return total
-	
-class Status(models.Model):
-	status_name = models.CharField(max_length=500,blank=True,null=True)
-
-	def __str__(self):
-		return self.status_name
-
-class DeliveryFee(models.Model):
-	address = models.CharField(max_length=500,blank=True,null=True)
-	fee = models.CharField(max_length=500,blank=True,null=True)
-	duration = models.CharField(max_length=500,blank=True,null=True)
-
-	def __str__(self):
-		return f"{self.address} - {self.fee}"
-
-class ShippingAdress(models.Model):
-     
-	customer=models.ForeignKey(User,on_delete=models.SET_NULL,blank=True,null=True)
-	order=models.ForeignKey(Order,on_delete=models.SET_NULL,blank=True,null=True)
-	status = models.ForeignKey(Status,on_delete=models.SET_NULL,blank=True,null=True)
-	name=models.CharField(max_length=200,null=True)
-	address=models.CharField(max_length=200,null=True)
-	division=models.CharField(max_length=200,null=True)
-	district = models.CharField(max_length=50, null=True)
-	upazila = models.CharField(max_length=50, null=True)
-	phone_number=models.CharField(max_length=11)
-	date_added=models.DateTimeField(auto_now_add=True)
-	delivery_fee = models.ForeignKey(DeliveryFee,on_delete=models.SET_NULL,blank=True,null=True)
-
-
-
-	def __str__(self):
-		return self.address
-
-class DisplayMarketing(models.Model):
-	image=models.ImageField(upload_to='image',null=True,blank=True)
-
-	def __str__(self):
-		return self.image.name
-	
-class FeedBackUser(models.Model):
-	feddback=models.TextField(blank=True)
-
-class IssueUserEcommerce(models.Model):
-	issue_name=models.CharField(max_length = 200, blank=True)
-	issue_details = models.TextField(blank=True)
-
-	def __str__(self):
-		return self.issue_name
-	
-
-class WatchListProduct(models.Model):
-	user = models.ForeignKey(User,on_delete=models.SET_NULL,blank=True,null=True)
-	variant = models.ForeignKey(Variant,on_delete=models.CASCADE,blank=True,null=True)
-
-	def __str__(self):
-		return self.variant.product.name
-	
-class QuestionAnswer(models.Model):
-	user = models.ForeignKey(User,on_delete=models.SET_NULL,blank=True,null=True)
-	product = models.ForeignKey(Product,on_delete=models.CASCADE,blank=True,null=True)
-	question = models.TextField(blank=True,null=True)
-	answer  = models.TextField(blank=True,null=True)
-	createAt = models.DateTimeField(blank=True,null=True)
-
-	def __str__(self):
-		return f"{self.question} - {self.user.username}"
-
-	
-
+class Measurement(models.Model):
+    image = models.ImageField(upload_to='images/')
+    length = models.FloatField(null=True, blank=True)

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reservation Confirmation</title>
+  </head>
+  <body
+    style="
+      background-color: #f3f4f6;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    "
+  >
+    <div
+      style="
+        max-width: 600px;
+        margin: 20px auto;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      "
+    >
+      <div style="padding: 20px">
+        <h1
+          style="
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            color: white;
+            background-color: #795f9e;
+            padding: 20px;
+            border-radius: 5px;
+          "
+        >
+          Reservation Confirmation
+        </h1>
+        <p style="color: #4a5568; margin-bottom: 16px">Dear {{ user }},</p>
+        <p
+          style="
+            color: #4a5568;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+          "
+        >
+          We are happy to announce that your reservation in our apartment is
+          confirmed!
+        </p>
+        <p
+          style="
+            font-weight: bold;
+            font-size: 18px;
+            color: #718096;
+            margin-bottom: 16px;
+          "
+        >
+          Confirmation Number: {{confirmation_number}}
+        </p>
+        <p>
+          <span style="font-weight: 500; color: #4a5568; margin-top: 16px"
+            >Special Note:
+          </span>
+          Please keep this information confidential and present it upon
+          check-in.
+        </p>
+
+        <div>
+          {% if image_url %}
+          <img
+            src="{{ image_url }}"
+            alt="Room Image"
+            style="
+              width: 100%;
+              height: auto;
+              border-radius: 8px;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            "
+          />
+          {% else %}
+          <p>No image available for this room.</p>
+          {% endif %}
+        </div>
+
+        <table
+          style="
+            width: 100%;
+            margin-top: 16px;
+            background-color: #f3f4f6;
+            border-radius: 5px;
+            overflow: hidden; /* Ensure the corners are rounded */
+          "
+        >
+          <tr>
+            <td style="padding: 8px">Check-in Date:</td>
+            <td style="padding: 8px; color: #4a5568">{{ check_in }}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0">
+              Check-out Date:
+            </td>
+            <td
+              style="
+                padding: 8px;
+                border-bottom: 1px solid #e2e8f0;
+                color: #4a5568;
+              "
+            >
+              {{ check_out }}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px">Name:</td>
+            <td style="padding: 8px; color: #4a5568">{{user}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px">Room Type:</td>
+            <td style="padding: 8px; color: #4a5568">{{room.room_type}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0">
+              Number of Guests:
+            </td>
+            <td
+              style="
+                padding: 8px;
+                border-bottom: 1px solid #e2e8f0;
+                color: #4a5568;
+              "
+            >
+              {{ adults }} Adults
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0">
+              Total Amount:
+            </td>
+            <td
+              style="
+                padding: 8px;
+                border-bottom: 1px solid #e2e8f0;
+                color: #4a5568;
+              "
+            >
+              BDT {{ amount }}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0">
+              Hotel Address:
+            </td>
+            <td
+              style="
+                padding: 8px;
+                border-bottom: 1px solid #e2e8f0;
+                color: #4a5568;
+              "
+            >
+              Gravity Hotel,<br />
+              1220 Ocean View Drive,<br />
+              Seaside Cover, California
+            </td>
+          </tr>
+        </table>
+
+        <p style="color: #4a5568; margin-top: 16px">
+          If you have any special requests, please let us know!
+        </p>
+
+        <div style="padding-top: 16px">
+          <p style="color: #4a5568">We look forward to welcoming you!</p>
+          <p style="color: #4a5568">Best regards,</p>
+          <p style="color: #4a5568; font-weight: bold">The Hotel Team</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
