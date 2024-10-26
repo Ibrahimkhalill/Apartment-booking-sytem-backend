@@ -49,7 +49,8 @@ class RoomSerializer(serializers.ModelSerializer):
             'quantity', 
             'room_people', 
             'features', 
-            'images'
+            'images',
+            'room_address'
             
         ]
         

@@ -58,6 +58,9 @@ urlpatterns = [
    
    path ('api/delete/room/<int:room_id>/feature/<int:feature_id>/', delete_feature_from_room),
    path ('api/delete/room/image/<int:image_id>/', delete_image_from_room),
+
+    path('api/get-coordinates/', get_coordinates, name='get_coordinates'),
+
    # path('get_date',views.get_date,name='get_date'),
    # path('available_room/',views.available_room,name="available_room"),
 

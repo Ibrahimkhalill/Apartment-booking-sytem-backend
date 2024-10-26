@@ -66,6 +66,7 @@ class Room(models.Model):
     quantity = models.IntegerField(null=True, blank=True)
     room_people = models.CharField(max_length=5, null=True, blank=True)
     features = models.ManyToManyField(FeatureList)
+    room_address = models.TextField(blank=True, null=True)
     
     # New fields for hold functionality
 

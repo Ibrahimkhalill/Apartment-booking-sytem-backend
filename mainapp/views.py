@@ -28,8 +28,6 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
-from django.contrib.auth import get_user_model
-from django.contrib.auth import logout
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as django_login
 from django.views.decorators.csrf import csrf_exempt
@@ -40,6 +38,9 @@ from rest_framework.response import Response
 from .models import Room, PreBooking,FeatureList  # Adjust the import based on your project structure
 # from .utils import measure_foot
 from.OtpGenarator import generate_otp
+import requests
+
+from django.conf import settings
 
 @api_view(["POST"])
 def send_otp(request):
@@ -680,6 +681,7 @@ def add_room(request):
         max_people = request.POST.get('maxPeople')
         quantity = request.POST.get('quantity')
         price = request.POST.get('price')
+        room_address = request.POST.get('room_address')
         description = request.POST.get('description')
 
         # Extract features (JSON string to list)
@@ -693,6 +695,7 @@ def add_room(request):
             size=size, 
             room_people=max_people, 
             price=price, 
+            room_address=room_address,
             quantity=quantity, 
             room_description=description
         )
@@ -739,6 +742,7 @@ def updated_room(request,id):
         max_people = request.POST.get('maxPeople')
         quantity = request.POST.get('quantity')
         price = request.POST.get('price')
+        room_address = request.POST.get('room_address')
         description = request.POST.get('description')
 
         # Extract features (JSON string to list)
@@ -756,6 +760,7 @@ def updated_room(request,id):
         room.price=price
         room.quantity=quantity
         room.room_description=description
+        room.room_address = room_address
     
         room.save()
         room.features.clear()
@@ -1150,6 +1155,25 @@ def detele_RoomFeature(request, id):
 
 
 
+
+@api_view(["GET"])
+def get_coordinates(request):
+    address = request.GET.get('address')
+    print("address",address)
+    if not address:
+        return JsonResponse({'error': 'Address parameter is missing'}, status=400)
+    
+    # URL encoding the address to avoid issues with special characters
+    address = requests.utils.quote(address)
+    url = f"https://nominatim.openstreetmap.org/search?q=Basundhara+Residential+Area&format=json"
+    
+    response = requests.get(url)
+    
+    if response.status_code == 200 and response.json():
+        data = response.json()[0]
+        return JsonResponse({"lat": data["lat"], "lng": data["lon"]})
+    
+    return JsonResponse({'error': 'Coordinates not found'}, status=404)
 
 
 
