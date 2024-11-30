@@ -42,6 +42,10 @@ import requests
 
 from django.conf import settings
 
+def index(request):
+    return render(request, 'index.html')
+
+
 @api_view(["POST"])
 def send_otp(request):
     if request.method == 'POST':

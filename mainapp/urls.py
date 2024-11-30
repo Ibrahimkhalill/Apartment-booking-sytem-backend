@@ -4,6 +4,7 @@ from .views import *
 urlpatterns = [
    
    # path('',views.home, name='home'),
+   path('', index, name='index'),
    path('send/otp/', send_otp, name='send_otp'),
    path('verify-otp/', verify_otp, name='verify_otp'),
    path('api/signup/', signup_view, name='signup'),
